@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_connection():
+    supabase_url = os.getenv("SUPABASE_DATABASE_URL")
+    if supabase_url:
+        return psycopg2.connect(supabase_url)
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
         port=os.getenv("DB_PORT"),
