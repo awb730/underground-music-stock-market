@@ -1,4 +1,5 @@
-export default function Header({ searchQuery, setSearchQuery, activePage, setActivePage, onSearch, searching, searchError }) {
+export default function Header({ searchQuery, setSearchQuery, activePage, setActivePage, onSearch, searching, searchError, user, onLogout }) {
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") onSearch(searchQuery)
   }
@@ -46,11 +47,29 @@ export default function Header({ searchQuery, setSearchQuery, activePage, setAct
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="material-symbols-outlined text-outline hover:text-on-surface transition-colors">notifications</button>
-        <button className="material-symbols-outlined text-outline hover:text-on-surface transition-colors">settings</button>
-        <div className="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center">
-          <span className="material-symbols-outlined text-outline text-[18px]">person</span>
+        {/* Credits balance */}
+        <div className="hidden md:flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/30">
+          <span className="material-symbols-outlined text-tertiary text-[16px]">toll</span>
+          <span className="font-mono text-sm text-tertiary font-bold">{user?.credits?.toLocaleString()}</span>
+          <span className="font-mono text-[11px] text-outline">credits</span>
         </div>
+
+        {/* Username */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center">
+            <span className="material-symbols-outlined text-outline text-[18px]">person</span>
+          </div>
+          <span className="hidden md:block font-mono text-sm text-on-surface-variant">{user?.username}</span>
+        </div>
+
+        {/* Logout */}
+        <button
+          onClick={onLogout}
+          className="material-symbols-outlined text-outline hover:text-error transition-colors"
+          title="Logout"
+        >
+          logout
+        </button>
       </div>
     </header>
   )

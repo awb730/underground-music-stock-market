@@ -4,14 +4,35 @@ import Sidebar from "./components/Sidebar"
 import Header from "./components/Header"
 import Leaderboard from "./pages/Leaderboard"
 import ArtistDetail from "./pages/ArtistDetail"
+import Auth from "./pages/Auth"
 
 export default function App() {
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem("token")
+    const username = localStorage.getItem("username")
+    const credits = localStorage.getItem("credits")
+    if (token && username) {
+      return { username, credits: parseInt(credits) }
+    }
+    return null
+  })
   const [selectedArtist, setSelectedArtist] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activePage, setActivePage] = useState("leaderboard")
   const [artists, setArtists] = useState([])
   const [searchError, setSearchError] = useState(null)
   const [searching, setSearching] = useState(false)
+
+  const handleLogin = (userData) => {
+    setUser(userData)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("username")
+    localStorage.removeItem("credits")
+    setUser(null)
+  }
 
   const handleSearch = async (query) => {
     if (!query.trim()) return
@@ -33,6 +54,8 @@ export default function App() {
     }
   }
 
+  if (!user) return <Auth onLogin={handleLogin} />
+
   return (
     <div className="min-h-screen bg-background text-on-surface flex">
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
@@ -46,6 +69,8 @@ export default function App() {
           onSearch={handleSearch}
           searching={searching}
           searchError={searchError}
+          user={user}
+          onLogout={handleLogout}
         />
 
         <section className="p-6 max-w-[1440px] mx-auto w-full">
@@ -53,6 +78,8 @@ export default function App() {
             <ArtistDetail
               artist={selectedArtist}
               onBack={() => setSelectedArtist(null)}
+              user={user}
+              setUser={setUser}
             />
           ) : (
             <Leaderboard

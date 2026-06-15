@@ -149,6 +149,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return payload
 
+# --- Auth Endpoints ---
+
 @app.post("/register")
 def register(req: RegisterRequest):
     conn = get_connection()
@@ -167,8 +169,9 @@ def register(req: RegisterRequest):
         return {"token": token, "username": user[1], "credits": user[2]}
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=400, detail="Username or email already exists")
+    except Exception as e:
+        print(f"Registration error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
         conn.close()
@@ -220,7 +223,7 @@ def open_position(req: OpenPositionRequest, current_user: dict = Depends(get_cur
     if req.direction not in ("LONG", "SHORT"):
         raise HTTPException(status_code=400, detail="Direction must be LONG or SHORT")
 
-    # Get current listener count
+    # Get current listener count — fix: cast artist_id to int
     df = get_artist_history(int(req.artist_id))
     if df.empty:
         raise HTTPException(status_code=404, detail="Artist not found")
@@ -234,7 +237,10 @@ def open_position(req: OpenPositionRequest, current_user: dict = Depends(get_cur
         RETURNING id;
     """, (user_id, req.artist_id, req.direction, req.credits_wagered, listener_count))
 
-    position_id = cursor.fetchone()
+    # Fix: null check on fetchone
+    result = cursor.fetchone()
+    position_id = result[0] if result else None
+
     conn.commit()
     cursor.close()
     conn.close()
