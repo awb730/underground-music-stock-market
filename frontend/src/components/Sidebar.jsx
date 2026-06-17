@@ -1,6 +1,19 @@
 import logo from "../assets/logo.png"
 
 export default function Sidebar({ activePage, setActivePage }) {
+
+  function get_subtitle(activePage) {
+    switch(activePage) {
+      case "leaderboard":
+        return "Market Open"
+      case "portfolio":
+        return "Your Holdings"
+      default:
+        "Market Open"
+    }
+  }
+
+
   return (
     <aside className="hidden lg:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/20 py-6 z-[60]">
       
@@ -8,7 +21,7 @@ export default function Sidebar({ activePage, setActivePage }) {
         <img src={logo} alt="UMExchange logo" className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(76,215,246,0.3)]" />
         <div>
           <h2 className="text-secondary font-bold text-lg leading-none">UMExchange</h2>
-          <span className="font-mono text-[10px] text-tertiary uppercase tracking-widest mt-1 block">Market Open</span>
+          <span className="font-mono text-[10px] text-tertiary uppercase tracking-widest mt-1 block">{get_subtitle(activePage)}</span>
         </div>
       </div>
 
