@@ -14,7 +14,7 @@ A full-stack data engineering platform that treats underground rap artists like 
 
 ## Why this project
 
-Most portfolio projects are CRUD apps. This one applies real quantitative finance concepts — momentum, acceleration, z-scores, long/short positions — to a domain (underground rap) with genuinely chaotic, fast-moving data. It demonstrates data engineering, time-series feature engineering, backend API design, authentication, and a polished frontend, all wired into one coherent product.
+Most portfolio projects are CRUD apps. This one applies real quantitative finance concepts such as momentum, acceleration, z-scores, long/short positions to a domain (music) with genuinely chaotic, fast-moving data. It demonstrates data engineering, time-series feature engineering, backend API design, authentication, and a polished frontend, all wired into one coherent product.
 
 ## Core concept
 
@@ -123,4 +123,4 @@ positions          — id, user_id, artist_id, direction, credits_wagered,
 
 ## Author
 
-Allen Baez, a Senior Computer Science student @ Montclair State University, as a portfolio project demonstrating full-stack data engineering, applied quantitative methods, and product thinking.
+Allen Baez - Computer Science student @ Montclair State University, as a portfolio project demonstrating full-stack data engineering, applied quantitative methods, and product thinking.
