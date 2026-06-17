@@ -1,13 +1,13 @@
+import logo from "../assets/logo.png"
+
 export default function Sidebar({ activePage, setActivePage }) {
   return (
     <aside className="hidden lg:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/20 py-6 z-[60]">
       
       <div className="px-6 mb-10 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary-container text-[18px]">music_note</span>
-        </div>
+        <img src={logo} alt="UMExchange logo" className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(76,215,246,0.3)]" />
         <div>
-          <h2 className="text-secondary font-bold text-lg leading-none">UMX Terminal</h2>
+          <h2 className="text-secondary font-bold text-lg leading-none">UMExchange</h2>
           <span className="font-mono text-[10px] text-tertiary uppercase tracking-widest mt-1 block">Market Open</span>
         </div>
       </div>

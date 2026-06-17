@@ -23,6 +23,7 @@ export default function App() {
   const [artists, setArtists] = useState([])
   const [searchError, setSearchError] = useState(null)
   const [searching, setSearching] = useState(false)
+  const [sessionMessage, setSessionMessage] = useState(null);
 
   const handleNavigate = (page) => {
     setActivePage(page);
@@ -69,10 +70,12 @@ export default function App() {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
-        if (error.response?.status === 401) {
+        const isLoginOrRegister = error.config?.url?.includes("/login") || error.config?.url?.includes("/register");
+        if (error.response?.status === 401 && !isLoginOrRegister) {
           localStorage.removeItem("token")
           localStorage.removeItem("username")
           localStorage.removeItem("credits")
+          setSessionMessage("Your session expired. Please log in again.")
           setUser(null)
         }
         return Promise.reject(error)
@@ -81,7 +84,7 @@ export default function App() {
     return () => axios.interceptors.response.eject(interceptor)
   }, [])
 
-  if (!user) return <Auth onLogin={handleLogin} />
+  if (!user) return <Auth onLogin={handleLogin} sessionMessage={sessionMessage} />
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex">

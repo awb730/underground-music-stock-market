@@ -31,6 +31,34 @@ function computeStats(artists) {
 export default function Leaderboard({ onSelect, artists, setArtists, onSearch, searching, searchError }) {
   const [loading, setLoading] = useState(artists.length === 0)
   const [localSearch, setLocalSearch] = useState("")
+  const [activeFilter, setActiveFilter] = useState("ALL");
+
+  const FILTERS = ["ALL", "BREAKOUT", "RISING", "STABLE", "COOLING", "DORMANT"]
+
+  const FILTER_COLORS = {
+    ALL: "text-on-surface border-outline-variant/30 hover:border-secondary/30",
+    BREAKOUT: "text-green-400 border-green-500/20 hover:border-green-500/40",
+    RISING: "text-secondary border-secondary/20 hover:border-secondary/40",
+    STABLE: "text-slate-400 border-slate-500/20 hover:border-slate-500/40",
+    COOLING: "text-yellow-400 border-yellow-500/20 hover:border-yellow-500/40",
+    DORMANT: "text-rose-400 border-rose-500/20 hover:border-rose-500/40",
+  }
+
+  const FILTER_ACTIVE_COLORS = {
+    ALL: "bg-secondary/20 text-secondary border-secondary/40",
+    BREAKOUT: "bg-green-500/20 text-green-400 border-green-500/40",
+    RISING: "bg-secondary/20 text-secondary border-secondary/40",
+    STABLE: "bg-slate-500/20 text-slate-400 border-slate-500/40",
+    COOLING: "bg-yellow-500/20 text-yellow-400 border-yellow-500/40",
+    DORMANT: "bg-rose-500/20 text-rose-400 border-rose-500/40",
+  }
+
+  const filteredArtists = activeFilter === "ALL"
+    ? artists
+    : artists.filter(a => a.signal === activeFilter)
+
+
+  const stats = computeStats(artists)
 
   useEffect(() => {
     if (artists.length === 0) {
@@ -38,9 +66,7 @@ export default function Leaderboard({ onSelect, artists, setArtists, onSearch, s
         .then(res => setArtists(Array.isArray(res.data) ? res.data : []))
         .finally(() => setLoading(false))
     }
-  }, []) 
-
-  const stats = computeStats(artists)
+  }, [artists.length, setArtists]) 
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -84,6 +110,28 @@ export default function Leaderboard({ onSelect, artists, setArtists, onSearch, s
         </div>
       </div>
 
+      {/* Filter Bar */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {FILTERS.map(filter => (
+          <button
+            key={filter}
+            onClick={() => setActiveFilter(filter)}
+            className={`px-4 py-1.5 rounded-lg font-mono text-xs border transition-all ${
+              activeFilter === filter
+                ? FILTER_ACTIVE_COLORS[filter]
+                : `bg-surface-container-low ${FILTER_COLORS[filter]}`
+            }`}
+          >
+            {filter}
+            {filter !== "ALL" && (
+              <span className="ml-2 opacity-60">
+                {artists.filter(a => a.signal === filter).length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       <div className="glass-card rounded-xl overflow-hidden border border-outline-variant/20">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -98,7 +146,7 @@ export default function Leaderboard({ onSelect, artists, setArtists, onSearch, s
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/10">
-            {artists.map((a, i) => (
+            {filteredArtists.map((a, i) => (
               <tr
                 key={i}
                 onClick={() => onSelect(a)}

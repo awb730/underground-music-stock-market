@@ -1,7 +1,8 @@
 import { useState } from "react"
 import axios from "axios"
+import logo from "../assets/logo.png"
 
-export default function Auth({ onLogin }) {
+export default function Auth({ onLogin, sessionMessage }) {
   const [mode, setMode] = useState("login")
   const [form, setForm] = useState({ username: "", email: "", confirmEmail: "", password: "" })
   const [showPassword, setShowPassword] = useState(false)
@@ -52,12 +53,16 @@ export default function Auth({ onLogin }) {
       <div className="glass-card rounded-xl p-8 w-full max-w-md border border-outline-variant/20">
 
         {/* Logo */}
+        {sessionMessage && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3 mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-yellow-400 text-[18px]">info</span>
+              <p className="text-yellow-400 font-mono text-xs">{sessionMessage}</p>
+            </div>
+        )}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container">music_note</span>
-          </div>
+          <img src={logo} alt="UMExchange logo" className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(76,215,246,0.3)]" />
           <div>
-            <h1 className="text-secondary font-bold text-xl leading-none">UMX Terminal</h1>
+            <h1 className="text-secondary font-bold text-xl leading-none">UMExchange</h1>
             <span className="font-mono text-[10px] text-tertiary uppercase tracking-widest">Underground Music Exchange</span>
           </div>
         </div>
@@ -67,7 +72,7 @@ export default function Auth({ onLogin }) {
           {mode === "login" ? "Welcome back" : "Create account"}
         </h2>
         <p className="text-on-surface-variant text-sm font-mono mb-8">
-          {mode === "login" ? "Sign in to your terminal" : "Start with 1,000 free credits"}
+          {mode === "login" ? "Sign in to your account" : "Start with 1,000 free credits"}
         </p>
 
         {/* Form */}
