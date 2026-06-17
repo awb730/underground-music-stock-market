@@ -112,6 +112,7 @@ export default function Leaderboard({ onSelect, artists, setArtists, onSearch, s
 
       {/* Filter Bar */}
       <div className="flex gap-2 mb-6 flex-wrap">
+        <p className="text-on-surface-variant text-md mt-1">Filter By:</p>
         {FILTERS.map(filter => (
           <button
             key={filter}
