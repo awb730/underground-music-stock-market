@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -13,6 +13,10 @@ from features.momentum import compute_features, get_artist_history
 from signals.engine import classify_signal
 import pandas as pd
 from ingestion.lastfm_client import get_artist as fetch_lastfm_artist
+import stripe
+from api.bundles import BUNDLES
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 
 class RegisterRequest(BaseModel):
@@ -28,6 +32,9 @@ class OpenPositionRequest(BaseModel):
     artist_id: int
     direction: str
     credits_wagered: int
+
+class CreateCheckoutRequest(BaseModel):
+    bundle_key: str
 
 
 app = FastAPI(title="Music Quant API")
@@ -363,3 +370,106 @@ def close_position(position_id: int, current_user: dict = Depends(get_current_us
         "pnl": pnl,
         "credits_returned": credits_returned
     }
+
+@app.post("/payments/create-checkout-session")
+def create_checkout_session(req: CreateCheckoutRequest, current_user: dict = Depends(get_current_user)):
+    bundle = BUNDLES.get(req.bundle_key)
+    if not bundle:
+        raise HTTPException(status_code=400, detail="Invalid bundle")
+
+    user_id = int(current_user["sub"])
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": f"{bundle['label']} — {bundle['credits']} Credits",
+                    },
+                    "unit_amount": bundle["price_cents"],
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=f"{frontend_url}/?payment=success",
+            cancel_url=f"{frontend_url}/?payment=cancelled",
+            metadata={
+                "user_id": str(user_id),
+                "bundle_key": req.bundle_key,
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # Record pending purchase
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO credit_purchases (user_id, stripe_session_id, bundle_key, credits_purchased, amount_cents, status)
+        VALUES (%s, %s, %s, %s, %s, 'pending');
+    """, (user_id, session.id, req.bundle_key, bundle["credits"], bundle["price_cents"]))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"checkout_url": session.url}
+
+@app.post("/payments/webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+    except Exception as e:
+        if "signature" in str(e).lower():
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        stripe_session_id = session["id"]
+        user_id = int(session["metadata"]["user_id"])
+        bundle_key = session["metadata"]["bundle_key"]
+
+        bundle = BUNDLES.get(bundle_key)
+        if not bundle:
+            return {"status": "ignored"}
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Check if already processed to prevent double crediting
+        cursor.execute("""
+            SELECT status FROM credit_purchases
+            WHERE stripe_session_id = %s;
+        """, (stripe_session_id,))
+        row = cursor.fetchone()
+
+        if row and row[0] == "completed":
+            cursor.close()
+            conn.close()
+            return {"status": "already processed"}
+
+        # Credit the user
+        cursor.execute("""
+            UPDATE users SET credits = credits + %s WHERE id = %s;
+        """, (bundle["credits"], user_id))
+
+        # Mark purchase as completed
+        cursor.execute("""
+            UPDATE credit_purchases
+            SET status = 'completed', completed_at = NOW()
+            WHERE stripe_session_id = %s;
+        """, (stripe_session_id,))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print(f"Credited {bundle['credits']} credits to user {user_id}")
+
+    return {"status": "ok"}

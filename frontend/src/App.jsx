@@ -6,6 +6,7 @@ import Leaderboard from "./pages/Leaderboard"
 import ArtistDetail from "./pages/ArtistDetail"
 import Portfolio from "./pages/Portfolio"
 import Auth from "./pages/Auth"
+import BuyCredits from "./pages/BuyCredits"
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -84,6 +85,26 @@ export default function App() {
     return () => axios.interceptors.response.eject(interceptor)
   }, [])
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const payment = params.get("payment")
+    if (payment === "success") {
+      // Refetch user credits from backend
+      const token = localStorage.getItem("token")
+      if (token) {
+        axios.get(`${import.meta.env.VITE_API_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+          const newCredits = res.data.credits
+          localStorage.setItem("credits", newCredits)
+          setUser(prev => ({ ...prev, credits: newCredits }))
+        })
+      }
+      // Clean up URL
+      window.history.replaceState({}, "", "/")
+    }
+  }, [])
+
   if (!user) return <Auth onLogin={handleLogin} sessionMessage={sessionMessage} />
 
   return (
@@ -114,6 +135,8 @@ export default function App() {
               />
             ) : activePage === "portfolio" ? (
               <Portfolio user={user} setUser={setUser} />
+            ) : activePage === "buyCredits" ? (
+              <BuyCredits user={user} />
             ) : (
               <Leaderboard
                 onSelect={setSelectedArtist}

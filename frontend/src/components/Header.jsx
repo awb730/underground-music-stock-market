@@ -43,6 +43,16 @@ export default function Header({ searchQuery, setSearchQuery, activePage, setAct
           >
             Portfolio
           </button>
+          <button
+            onClick={() => setActivePage("buyCredits")}
+            className={`font-mono text-sm transition-colors ${
+              activePage === "buyCredits"
+                ? "text-secondary border-b-2 border-secondary pb-1"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
+          >
+            Buy Credits
+          </button>
         </nav>
       </div>
 

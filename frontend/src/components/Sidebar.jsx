@@ -8,6 +8,8 @@ export default function Sidebar({ activePage, setActivePage }) {
         return "Market Open"
       case "portfolio":
         return "Your Holdings"
+      case "buyCredits":
+        return "Add Credits"
       default:
         "Market Open"
     }
@@ -49,6 +51,17 @@ export default function Sidebar({ activePage, setActivePage }) {
           <span className="font-mono text-sm">Portfolio</span>
         </button>
       </nav>
+      
+      {/* Buy Credits button */}
+      <div className="px-4 mb-4">
+        <button
+          onClick={() => setActivePage("buyCredits")}
+          className="w-full bg-secondary-container text-on-secondary-container font-mono text-sm py-3 rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+          Buy Credits
+        </button>
+      </div>
 
       <div className="space-y-1">
         <a href="#" className="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-white/5 transition-all">
