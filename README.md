@@ -117,7 +117,7 @@ positions          — id, user_id, artist_id, direction, credits_wagered,
 
 ## Roadmap
 
-- [✓] Stripe integration for purchasing credit bundles
+- [ ✓ ] Stripe integration for purchasing credit bundles
 - [ ] Backtesting framework to validate signal accuracy against historical outcomes
 - [ ] Migrate scheduled ingestion to a cloud-native scheduler (e.g. Render cron jobs)
 - [ ] Admin dashboard for managing tracked artists
