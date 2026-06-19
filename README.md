@@ -2,9 +2,11 @@
 
 A full-stack data engineering platform that treats underground rap artists like financial assets. Live streaming data is pulled into a quant-style pipeline that computes momentum indicators, classifies artists into market signals, and lets users open simulated LONG/SHORT positions on whether an artist's listener base will rise or fall.
 
+![Home Page Screenshot](docs/screenshots/home-page.png)
 ![Leaderboard Screenshot](docs/screenshots/leaderboard.png)
 ![Artist Detail Screenshot](docs/screenshots/artist-detail.png)
 ![Portfolio Screenshot](docs/screenshots/portfolio.png)
+![Purchase Credits Screenshot](docs/screenshots/credits.png)
 
 
 **Live demo:** [music-stock-exchange.netlify.app](https://music-stock-exchange.netlify.app)
@@ -115,7 +117,7 @@ positions          — id, user_id, artist_id, direction, credits_wagered,
 
 ## Roadmap
 
-- [ ] Stripe integration for purchasing credit bundles
+- [✓] Stripe integration for purchasing credit bundles
 - [ ] Backtesting framework to validate signal accuracy against historical outcomes
 - [ ] Migrate scheduled ingestion to a cloud-native scheduler (e.g. Render cron jobs)
 - [ ] Admin dashboard for managing tracked artists

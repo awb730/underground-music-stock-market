@@ -70,7 +70,7 @@ function HeroSection({ onSignIn, onRegister }) {
           </button>
           <button
             onClick={onSignIn}
-            className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant/30 font-mono font-bold py-3.5 px-8 rounded-lg hover:border-secondary/40 hover:text-secondary transition-all text-sm"
+            className="flex-1 bg-surface-container-low text-on-surface border border-outline-variant/30 font-mono font-bold py-3.5 px-8 rounded-lg hover:border-secondary/40 hover:text-secondary transition-all text-md"
           >
             Sign In
           </button>
