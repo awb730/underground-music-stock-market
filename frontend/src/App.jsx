@@ -7,6 +7,7 @@ import ArtistDetail from "./pages/ArtistDetail"
 import Portfolio from "./pages/Portfolio"
 import Auth from "./pages/Auth"
 import BuyCredits from "./pages/BuyCredits"
+import LoadingScreen from "./components/LoadingScreen";
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -25,6 +26,7 @@ export default function App() {
   const [searchError, setSearchError] = useState(null)
   const [searching, setSearching] = useState(false)
   const [sessionMessage, setSessionMessage] = useState(null);
+  const [appLoading, setAppLoading] = useState(true);
 
   const handleNavigate = (page) => {
     setActivePage(page);
@@ -68,6 +70,12 @@ export default function App() {
   }
 
   useEffect(() => {
+    // Brief delay to show loading screen while session is verified
+    const timer = setTimeout(() => setAppLoading(false), 1500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
@@ -105,6 +113,7 @@ export default function App() {
     }
   }, [])
 
+  if (appLoading) return <LoadingScreen />
   if (!user) return <Auth onLogin={handleLogin} sessionMessage={sessionMessage} />
 
   return (
