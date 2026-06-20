@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -15,8 +15,14 @@ import pandas as pd
 from ingestion.lastfm_client import get_artist as fetch_lastfm_artist
 import stripe
 from api.bundles import BUNDLES
+from supabase import create_client
+import uuid
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+supabase_client = create_client(
+    os.getenv("SUPABASE_URL", ""),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+)
 
 
 class RegisterRequest(BaseModel):
@@ -36,6 +42,15 @@ class OpenPositionRequest(BaseModel):
 class CreateCheckoutRequest(BaseModel):
     bundle_key: str
 
+class UpdateUsernameRequest(BaseModel):
+    new_username: str
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+class CheckUsernameRequest(BaseModel):
+    username: str
 
 app = FastAPI(title="Music Quant API")
 
@@ -202,13 +217,13 @@ def login(req: LoginRequest):
 def get_me(current_user: dict = Depends(get_current_user)):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, credits FROM users WHERE id = %s;", (current_user["sub"],))
+    cursor.execute("SELECT id, username, email, credits, avatar_url FROM users WHERE id = %s;", (current_user["sub"],))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"id": user[0], "username": user[1], "email": user[2], "credits": user[3]}
+    return {"id": user[0], "username": user[1], "email": user[2], "credits": user[3], "avatar_url": user[4]}
 
 # --- Position Endpoints ---
 
@@ -473,3 +488,98 @@ async def stripe_webhook(request: Request):
         print(f"Credited {bundle['credits']} credits to user {user_id}")
 
     return {"status": "ok"}
+
+# Settings Endpoints
+
+# Usernames
+@app.post("/settings/check-username")
+def check_username(req: CheckUsernameRequest, current_user: dict = Depends(get_current_user)):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE username = %s;", (req.username,))
+    existing = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if existing and str(existing[0] != current_user["sub"]):
+        return {"available": False}
+    return {"available": True}
+
+@app.post("/settings/update-username")
+def update_username(req: UpdateUsernameRequest, current_user: dict = Depends(get_current_user)):
+    user_id = int(current_user["sub"])
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM users WHERE username = %s AND id != %s;", (req.new_username, user_id))
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=400, detail="Username already taken")
+
+    cursor.execute("UPDATE users SET username = %s WHERE id = %s;", (req.new_username, user_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    new_token = create_access_token({"sub": str(user_id), "username": req.new_username})
+    return {"username": req.new_username, "token": new_token}
+
+# Passwords
+@app.post("/settings/update-password")
+def update_password(req: UpdatePasswordRequest, current_user: dict = Depends(get_current_user)):
+    user_id = int(current_user["sub"])
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT password_hash FROM users WHERE id = %s;", (user_id,))
+    row = cursor.fetchone()
+    if not row or not verify_password(req.current_password, row[0]):
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(req.new_password) < 6:
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s;", (hash_password(req.new_password), user_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"message": "Password updated successfully"}
+
+
+# Profile Pics
+@app.post("/settings/upload-avatar")
+async def upload_avatar(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    user_id = int(current_user["sub"])
+
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, or WEBP images allowed")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image must be under 5MB")
+
+    file_ext = file.filename.split(".")[-1] if file.filename else "jpg"
+    file_path = f"{user_id}/{uuid.uuid4()}.{file_ext}"
+
+    try:
+        supabase_client.storage.from_("avatars").upload(
+            file_path, contents, {"content-type": file.content_type}
+        )
+        public_url = supabase_client.storage.from_("avatars").get_public_url(file_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET avatar_url = %s WHERE id = %s;", (public_url, user_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"avatar_url": public_url}

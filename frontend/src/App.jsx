@@ -170,6 +170,13 @@ export default function App() {
           <span className="material-symbols-outlined">settings</span>
           <span className="font-mono text-[10px]">Settings</span>
         </button>
+        <button
+          onClick={() => handleNavigate("buyCredits")}
+          className={`flex flex-col items-center gap-1 ${activePage === "buyCredits" ? "text-secondary" : "text-outline"}`}
+        >
+          <span className="material-symbols-outlined">add_shopping_cart</span>
+          <span className="font-mono text-[10px]">Credits</span>
+        </button>
       </nav>
     </div>
   )
