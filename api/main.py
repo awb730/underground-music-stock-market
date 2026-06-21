@@ -15,14 +15,11 @@ import pandas as pd
 from ingestion.lastfm_client import get_artist as fetch_lastfm_artist
 import stripe
 from api.bundles import BUNDLES
-from supabase import create_client
 import uuid
+import requests as http_requests
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-supabase_client = create_client(
-    os.getenv("SUPABASE_URL", ""),
-    os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-)
+
 
 
 class RegisterRequest(BaseModel):
@@ -202,7 +199,7 @@ def register(req: RegisterRequest):
 def login(req: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, password_hash, credits FROM users WHERE username = %s;", (req.username,))
+    cursor.execute("SELECT id, username, password_hash, credits, avatar_url FROM users WHERE username = %s;", (req.username,))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -211,7 +208,7 @@ def login(req: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     token = create_access_token({"sub": str(user[0]), "username": user[1]})
-    return {"token": token, "username": user[1], "credits": user[3]}
+    return {"token": token, "username": user[1], "credits": user[3], "avatar_url": user[4]}
 
 @app.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
@@ -567,13 +564,27 @@ async def upload_avatar(file: UploadFile = File(...), current_user: dict = Depen
     file_ext = file.filename.split(".")[-1] if file.filename else "jpg"
     file_path = f"{user_id}/{uuid.uuid4()}.{file_ext}"
 
-    try:
-        supabase_client.storage.from_("avatars").upload(
-            file_path, contents, {"content-type": file.content_type}
-        )
-        public_url = supabase_client.storage.from_("avatars").get_public_url(file_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    supabase_url = os.getenv("SUPABASE_URL", "")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+    upload_url = f"{supabase_url}/storage/v1/object/avatars/{file_path}"
+    upload_url = f"{supabase_url}/storage/v1/object/avatars/{file_path}"
+    print(f"Upload URL: {upload_url}")
+    print(f"SUPABASE_URL value: {repr(supabase_url)}")
+    response = http_requests.post(
+        upload_url,
+        headers={
+            "Authorization": f"Bearer {service_key}",
+            "apikey": service_key,
+            "Content-Type": file.content_type,
+        },
+        data=contents
+    )
+
+    if response.status_code not in (200, 201):
+        raise HTTPException(status_code=500, detail=f"Upload failed: {response.text}")
+
+    public_url = f"{supabase_url}/storage/v1/object/public/avatars/{file_path}"
 
     conn = get_connection()
     cursor = conn.cursor()

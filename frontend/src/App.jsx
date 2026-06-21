@@ -7,14 +7,16 @@ import ArtistDetail from "./pages/ArtistDetail"
 import Portfolio from "./pages/Portfolio"
 import Auth from "./pages/Auth"
 import BuyCredits from "./pages/BuyCredits"
+import Settings from "./pages/Settings"
 
 export default function App() {
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem("token")
     const username = localStorage.getItem("username")
     const credits = localStorage.getItem("credits")
+    const avatarUrl = localStorage.getItem("avatar_url")
     if (token && username) {
-      return { username, credits: parseInt(credits) }
+      return { username, credits: parseInt(credits), avatarUrl: avatarUrl || null }
     }
     return null
   })
@@ -66,6 +68,27 @@ export default function App() {
         setSearching(false)
       }
   }
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (token) {
+      axios.get(`${import.meta.env.VITE_API_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => {
+        const userData = {
+          username: res.data.username,
+          credits: res.data.credits,
+          avatar_url: res.data.avatar_url
+        }
+        localStorage.setItem("username", userData.username)
+        localStorage.setItem("credits", userData.credits)
+        localStorage.setItem("avatar_url", userData.avatar_url || "")
+        setUser(userData)
+      }).catch(() => {
+        // Token invalid, handled by interceptor
+      })
+    }
+  }, [])
 
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
@@ -137,6 +160,8 @@ export default function App() {
               <Portfolio user={user} setUser={setUser} />
             ) : activePage === "buyCredits" ? (
               <BuyCredits user={user} />
+            ) : activePage === "settings" ? (
+              <Settings user={user} setUser={setUser} />
             ) : (
               <Leaderboard
                 onSelect={setSelectedArtist}

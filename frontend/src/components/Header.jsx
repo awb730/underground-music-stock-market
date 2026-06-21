@@ -55,7 +55,7 @@ export default function Header({ searchQuery, setSearchQuery, activePage, setAct
           </button>
         </nav>
       </div>
-
+      
       <div className="flex items-center gap-4">
         {/* Credits balance */}
         <div className="hidden md:flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/30">
@@ -63,11 +63,15 @@ export default function Header({ searchQuery, setSearchQuery, activePage, setAct
           <span className="font-mono text-sm text-tertiary font-bold">{user?.credits?.toLocaleString()}</span>
           <span className="font-mono text-[11px] text-outline">credits</span>
         </div>
-
+            
         {/* Username */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center">
-            <span className="material-symbols-outlined text-outline text-[18px]">person</span>
+          <div className="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-outline text-[18px]">person</span>
+            )}
           </div>
           <span className="hidden md:block font-mono text-sm text-on-surface-variant">{user?.username}</span>
         </div>
@@ -79,6 +83,13 @@ export default function Header({ searchQuery, setSearchQuery, activePage, setAct
           title="Logout"
         >
           logout
+        </button>
+
+        <button
+          onClick={() => setActivePage("settings")}
+          className="material-symbols-outlined text-outline hover:text-on-surface transition-colors"
+        >
+          settings
         </button>
       </div>
     </header>

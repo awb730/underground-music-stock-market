@@ -10,6 +10,8 @@ export default function Sidebar({ activePage, setActivePage }) {
         return "Your Holdings"
       case "buyCredits":
         return "Add Credits"
+      case "settings":
+        return "Settings"
       default:
         "Market Open"
     }
@@ -68,10 +70,13 @@ export default function Sidebar({ activePage, setActivePage }) {
           <span className="material-symbols-outlined">help</span>
           <span className="font-mono text-sm">Support</span>
         </a>
-        <a href="#" className="flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-white/5 transition-all">
+        <button
+          onClick={() => setActivePage("settings")}
+          className="w-full flex items-center gap-3 text-on-surface-variant px-4 py-3 hover:bg-white/5 transition-all"
+        >
           <span className="material-symbols-outlined">settings</span>
           <span className="font-mono text-sm">Settings</span>
-        </a>
+        </button>
       </div>
     </aside>
   )

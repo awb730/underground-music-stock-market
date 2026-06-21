@@ -135,7 +135,8 @@ function AuthForm({ mode, onBack, onLogin, sessionMessage }) {
       localStorage.setItem("token", res.data.token)
       localStorage.setItem("username", res.data.username)
       localStorage.setItem("credits", res.data.credits)
-      onLogin({ username: res.data.username, credits: res.data.credits })
+      localStorage.setItem("avatar_url", res.data.avatar_url || "")
+      onLogin({ username: res.data.username, credits: res.data.credits, avatar_url: res.data.avatar_url })
     } catch (e) {
       setError(e.response?.data?.detail || "Something went wrong")
     } finally {
