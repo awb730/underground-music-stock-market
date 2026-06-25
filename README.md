@@ -38,7 +38,8 @@ Users can register, receive starting credits, and open simulated positions betti
 Last.fm API → Ingestion (Python) → PostgreSQL (Supabase) → Feature Engine (Pandas) → Signal Classifier → FastAPI → React Frontend
 ```
 
-A scheduled job (Windows Task Scheduler in dev, cron-equivalent in production) pulls fresh listener/playcount data for every tracked artist once every 24 hours, building up real historical time-series data over time.
+A GitHub Actions workflow runs daily at 6 AM, pulling fresh listener/playcount data for every tracked artist and writes it to the Supabase PostgreSQL database.
+
 
 ## Tech stack
 
@@ -117,9 +118,9 @@ positions          — id, user_id, artist_id, direction, credits_wagered,
 
 ## Roadmap
 
-- [ ✓ ] Stripe integration for purchasing credit bundles
+- [x] Stripe integration for purchasing credit bundles
 - [ ] Backtesting framework to validate signal accuracy against historical outcomes
-- [ ] Migrate scheduled ingestion to a cloud-native scheduler (e.g. Render cron jobs)
+- [x] Migrate scheduled ingestion to a cloud-native scheduler (e.g. GitHub Actions)
 - [ ] Admin dashboard for managing tracked artists
 - [ ] Push notifications for signal changes on positions a user holds
 
