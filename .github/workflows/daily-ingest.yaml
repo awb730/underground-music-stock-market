@@ -25,4 +25,4 @@ jobs:
         env:
           LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
           SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-        run: python ingestion/ingest.py
+        run: python ingestion.ingest.py
