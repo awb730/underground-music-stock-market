@@ -149,7 +149,7 @@ export default function AssistantWidget() {
               </div>
               <div>
                 <p className="text-on-surface font-bold text-xs leading-none">UMX Assistant</p>
-                <p className="text-outline font-mono text-[9px] mt-0.5">Need Help</p>
+                <p className="text-outline font-mono text-[9px] mt-0.5">Help Center</p>
               </div>
             </div>
             <button
