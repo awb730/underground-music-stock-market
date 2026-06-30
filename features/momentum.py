@@ -21,6 +21,7 @@ def get_artist_history(artist_id: int) -> pd.DataFrame:
     cursor.close()
     conn.close()
 
+    """ Create the data frame based on the artist history """
     df = pd.DataFrame(rows, columns=["recorded_at", "listeners", "playcount"])
     return df
 
@@ -41,7 +42,7 @@ def compute_features(df: pd.DataFrame) -> dict:
     listener_growth_30d = (latest["listeners"] - day_30["listeners"]) / day_30["listeners"] * 100
     playcount_growth_7d = (latest["playcount"] - day_7["playcount"]) / day_7["playcount"] * 100
 
-    # Momentum: is growth accelerating?
+    # Momentum: is growth accelerating? Computed by subtracting 30 day growth info from the latest info
     mid = df.iloc[len(df) // 2]
     early_growth = (mid["listeners"] - day_30["listeners"]) / day_30["listeners"] * 100
     late_growth = (latest["listeners"] - mid["listeners"]) / mid["listeners"] * 100

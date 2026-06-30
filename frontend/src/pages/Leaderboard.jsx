@@ -149,7 +149,7 @@ export default function Leaderboard({ onSelect, artists, setArtists, onSearch, s
               <tr
                 key={i}
                 onClick={() => onSelect(a)}
-                className="signal-row transition-all duration-150 cursor-pointer group"
+                className="signal-row cursor-pointer group"
               >
                 <td className="px-6 py-4 font-mono text-sm text-outline group-hover:text-secondary">
                   {String(i + 1).padStart(2, "0")}

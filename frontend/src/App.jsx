@@ -8,6 +8,7 @@ import Portfolio from "./pages/Portfolio"
 import Auth from "./pages/Auth"
 import BuyCredits from "./pages/BuyCredits"
 import Settings from "./pages/Settings"
+import AssistantWidget from "./components/AssistantWidget"
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -203,6 +204,7 @@ export default function App() {
           <span className="font-mono text-[10px]">Credits</span>
         </button>
       </nav>
+      <AssistantWidget />
     </div>
   )
 }

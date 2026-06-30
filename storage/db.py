@@ -2,8 +2,9 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv() # Load the env variable which is the connection string to Supabase
 
+""" Establish connection to my supabase db and provide credentials """
 def get_connection():
     supabase_url = os.getenv("SUPABASE_DATABASE_URL")
     if supabase_url:
@@ -15,6 +16,7 @@ def get_connection():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD")
     )
+
 
 def upsert_artist(name: str, genres: list) -> int | None:
     conn = get_connection()
